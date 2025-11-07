@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Picture Service</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 120px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-cat { background: #FF6B6B; color: white; }
+        .btn-dog { background: #4ECDC4; color: white; }
+        .btn-bear { background: #95E1D3; color: white; }
+        .btn-latest { background: #667eea; color: white; }
+        .image-container {
+            margin-top: 20px;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #animalImage {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+        .loading {
+            color: #667eea;
+            font-size: 18px;
+        }
+        .error {
+            color: #FF6B6B;
+            padding: 20px;
+            background: #FFE5E5;
+            border-radius: 8px;
+        }
+        .info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐾 Animal Picture Service</h1>
+        <div class="controls">
+            <button class="btn-cat" onclick="fetchAnimal('cat')">Get Cat 🐱</button>
+            <button class="btn-dog" onclick="fetchAnimal('dog')">Get Dog 🐶</button>
+            <button class="btn-bear" onclick="fetchAnimal('bear')">Get Bear 🐻</button>
+            <button class="btn-latest" onclick="getLatest()">Show Latest</button>
+        </div>
+        <div class="image-container">
+            <div id="loading" class="loading" style="display:none;">Loading...</div>
+            <div id="error" class="error" style="display:none;"></div>
+            <img id="animalImage" alt="Animal Picture">
+            <div id="info" class="info" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('animalImage').style.display = 'none';
+            document.getElementById('info').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = message;
+            document.getElementById('animalImage').style.display = 'none';
+            document.getElementById('info').style.display = 'none';
+        }
+
+        function showImage(imageUrl, info) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('animalImage').src = imageUrl;
+            document.getElementById('animalImage').style.display = 'block';
+            
+            if (info) {
+                document.getElementById('info').innerHTML = info;
+                document.getElementById('info').style.display = 'block';
+            }
+        }
+
+        async function fetchAnimal(type) {
+            showLoading();
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/animal`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        animal_type: type,
+                        width: 400,
+                        height: 400
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const imageUrl = `${API_BASE}/api/animal/${data.id}/image`;
+                const info = `
+                    <strong>Type:</strong> ${data.animal_type} | 
+                    <strong>ID:</strong> ${data.id} | 
+                    <strong>Size:</strong> ${data.width}x${data.height}
+                `;
+                showImage(imageUrl, info);
+            } catch (error) {
+                showError(`Failed to fetch ${type} picture: ${error.message}`);
+            }
+        }
+
+        async function getLatest() {
+            showLoading();
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/animal/latest`);
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('No pictures in database yet. Fetch one first!');
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const imageUrl = `${API_BASE}/api/animal/latest/image`;
+                const info = `
+                    <strong>Type:</strong> ${data.animal_type} | 
+                    <strong>ID:</strong> ${data.id} | 
+                    <strong>Created:</strong> ${new Date(data.created_at).toLocaleString()}
+                `;
+                showImage(imageUrl, info);
+            } catch (error) {
+                showError(`Failed to get latest picture: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -19,7 +19,7 @@ This service provides REST API endpoints to:
 ### 1. Clone or Extract the Repository
 ```bash
 # If using Git
-git clone <repository-url>
+git clone https://github.com/black-cat-ops/animal-picture-service.git
 cd */animal-picture-service
 
 # If using ZIP

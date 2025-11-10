@@ -12,7 +12,7 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #91a0e6 0%, #a19ea4 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -52,10 +52,10 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        .btn-cat { background: #FF6B6B; color: white; }
-        .btn-dog { background: #4ECDC4; color: white; }
-        .btn-bear { background: #95E1D3; color: white; }
-        .btn-latest { background: #667eea; color: white; }
+        .btn-cat { background: #e4a0a0; color: white; }
+        .btn-dog { background: #654ecd; color: white; }
+        .btn-bear { background: #88a49f; color: white; }
+        .btn-latest { background: #eab60b; color: white; }
         .image-container {
             margin-top: 20px;
             text-align: center;
@@ -129,7 +129,10 @@
         function showImage(imageUrl, info) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error').style.display = 'none';
-            document.getElementById('animalImage').src = imageUrl;
+            
+            // Add timestamp to prevent caching
+            const cacheBuster = '?t=' + new Date().getTime();
+            document.getElementById('animalImage').src = imageUrl + cacheBuster;
             document.getElementById('animalImage').style.display = 'block';
             
             if (info) {

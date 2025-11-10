@@ -3,14 +3,16 @@ from sqlalchemy.orm import Session
 from app.models import AnimalPicture
 from app.schemas import AnimalPictureRequest
 import logging
+import random
+import time
 
 logger = logging.getLogger(__name__)
 
 # Animal picture API endpoints with fallbacks
 ANIMAL_APIS = {
     "cat": [
+        "https://cataas.com/cat?width={width}&height={height}&t={random}",
         "https://placekitten.com/{width}/{height}",
-        "https://cataas.com/cat?width={width}&height={height}",
     ],
     "dog": [
         "https://place.dog/{width}/{height}",
@@ -18,7 +20,7 @@ ANIMAL_APIS = {
     ],
     "bear": [
         "https://placebear.com/{width}/{height}",
-        "https://placebear.com/g/{width}/{height}"
+        "https://placebear.com/g/{width}/{height}",
     ]
 }
 
@@ -36,9 +38,16 @@ class AnimalService:
         urls = ANIMAL_APIS[animal_type]
         last_error = None
         
+        # Use timestamp for cache busting
+        random_param = int(time.time() * 1000)
+        
         for url_template in urls:
             try:
-                image_url = url_template.format(width=width, height=height)
+                image_url = url_template.format(
+                    width=width, 
+                    height=height,
+                    random=random_param
+                )
                 logger.info(f"Attempting to fetch from: {image_url}")
                 
                 response = requests.get(image_url, timeout=10)

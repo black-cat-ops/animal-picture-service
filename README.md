@@ -1,9 +1,7 @@
 # Animal Picture Service
-
 A microservice that fetches and stores random pictures of cats, dogs, and bears with built-in monitoring and observability.
 
 ## 🎯 Overview
-
 This service provides REST API endpoints to:
 - Fetch random animal pictures from external APIs
 - Store pictures in a PostgreSQL database
@@ -11,9 +9,8 @@ This service provides REST API endpoints to:
 - Monitor application metrics with Prometheus and Grafana
 
 ## 📋 Prerequisites
-
 **Required:**
-- Docker Desktop (includes Docker and Docker Compose)
+- Docker Desktop installed and running
 
 **That's it!** No need to install Python, PostgreSQL, or any other dependencies.
 
@@ -23,11 +20,11 @@ This service provides REST API endpoints to:
 ```bash
 # If using Git
 git clone <repository-url>
-cd animal-picture-service
+cd */animal-picture-service
 
 # If using ZIP
 unzip animal-picture-service.zip
-cd animal-picture-service
+cd */animal-picture-service
 ```
 
 ### 2. Start All Services
@@ -35,14 +32,24 @@ cd animal-picture-service
 docker-compose up --build
 ```
 
-Wait for all services to start (approximately 30-60 seconds). You'll see logs indicating the services are ready.
+**Wait approximately 60 seconds** for all services to start. You'll see logs indicating the services are ready.
 
 ### 3. Access the Application
-
 - **Web UI**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs (interactive Swagger UI)
 - **Grafana**: http://localhost:3000 (username: `admin`, password: `admin`)
 - **Prometheus**: http://localhost:9090
+
+## 📊 Monitoring 
+
+### Grafana Dashboards
+1. Visit http://localhost:3000
+2. Login with `admin` / `admin`
+3. Navigate to Dashboards to view metrics
+
+### Prometheus Metrics
+Visit http://localhost:9090 and query:
+- `app_requests_total` - Total number of requests
 
 ## 📡 API Endpoints
 
@@ -89,11 +96,16 @@ curl http://localhost:8000/api/animal/latest/image --output latest.jpg
 ```bash
 GET /health
 ```
+**Example Health Check**
+[Test in Swagger UI](http://localhost:8000/docs#/default/health_check_health_get)
 
 ### Metrics (Prometheus)
 ```bash
 GET /metrics
 ```
+**Example Metric**
+[Test in Swagger UI](http://localhost:8000/docs#/default/metrics_metrics_get)
+
 
 ## 🧪 Running Tests
 ```bash
@@ -101,13 +113,22 @@ GET /metrics
 docker-compose run app poetry run pytest
 
 # Run with coverage
-docker-compose run app poetry run pytest --cov=app tests/
-
-# Run specific test file
-docker-compose run app poetry run pytest tests/test_api.py
+docker-compose run --rm app poetry run pytest --cov=app tests/
 
 # Run with verbose output
 docker-compose run app poetry run pytest -v
+```
+
+## 🧹 Cleanup
+```bash
+# Stop all services
+docker-compose down
+
+# Remove all data (volumes)
+docker-compose down -v
+
+# Remove images
+docker-compose down --rmi all
 ```
 
 ## 🏗️ Architecture
@@ -132,14 +153,13 @@ docker-compose run app poetry run pytest -v
 ```
 
 ## 🛠️ Technology Stack
-
 - **Language**: Python 3.11
 - **Framework**: FastAPI
 - **Database**: PostgreSQL 15
 - **Build Tool**: Poetry
 - **Containerization**: Docker & Docker Compose
 - **Monitoring**: Prometheus + Grafana
-- **Testing**: pytest
+- **Testing**: pytest (7 automated tests)
 
 ## 📦 Project Structure
 ```
@@ -157,41 +177,11 @@ animal-picture-service/
 ├── ui/
 │   └── index.html        # Simple web interface
 ├── monitoring/
-│   ├── prometheus.yml    # Prometheus config
-│   └── grafana-dashboard.json
+│   └── prometheus.yml    # Prometheus config
 ├── Dockerfile
 ├── docker-compose.yml
 ├── pyproject.toml        # Poetry dependencies
 └── README.md
-```
-
-## 🔧 Development
-
-### Running Locally (Without Docker)
-```bash
-# Install Poetry
-curl -sSL https://install.python-poetry.org | python3 -
-
-# Install dependencies
-poetry install
-
-# Start PostgreSQL (must be running)
-# Update DATABASE_URL in .env file
-
-# Run the application
-poetry run uvicorn app.main:app --reload
-```
-
-### Adding New Dependencies
-```bash
-# Add runtime dependency
-poetry add <package-name>
-
-# Add development dependency
-poetry add --group dev <package-name>
-
-# Rebuild Docker image
-docker-compose up --build
 ```
 
 ## 🐛 Troubleshooting
@@ -217,6 +207,25 @@ docker-compose logs db
 docker-compose restart
 ```
 
+### Grafana Shows No Data
+1. Verify Prometheus is working: http://localhost:9090
+2. In Prometheus, query: `app_requests_total`. Click "Execute" - you should see metrics data.
+3. If not, you can try Generating Test Traffic
+```bash
+# Generate some requests to see in monitoring
+for i in {1..10}; do
+  curl -X POST http://localhost:8000/api/animal \
+    -H "Content-Type: application/json" \
+    -d '{"animal_type":"cat","width":400,"height":400}'
+  sleep 1
+done
+```
+4. If you see data in Prometheus but not Grafana:
+   - Check that data source is configured correctly
+   - Verify URL is `http://prometheus:9090` (not localhost)
+   - Click "Save & Test" in data source settings
+
+
 ### Clear All Data and Start Fresh
 ```bash
 # Stop and remove all containers and volumes
@@ -226,39 +235,13 @@ docker-compose down -v
 docker-compose up --build
 ```
 
-## 📊 Monitoring
-
-### Prometheus Metrics
-Visit http://localhost:9090 and query:
-- `app_requests_total` - Total number of requests
-- `app_request_duration_seconds` - Request duration histogram
-
-### Grafana Dashboards
-1. Visit http://localhost:3000
-2. Login with `admin` / `admin`
-3. Navigate to Dashboards to view metrics
-
-## 🧹 Cleanup
-```bash
-# Stop all services
-docker-compose down
-
-# Remove all data (volumes)
-docker-compose down -v
-
-# Remove images
-docker-compose down --rmi all
-```
-
 ## 📝 Notes
-
-- The application uses external APIs (placekitten.com, place.dog, placebear.com) to fetch images
+- The application uses external APIs (cataas.com, place.dog, placebear.com) to fetch images
 - Images are stored as binary data in PostgreSQL
 - The service includes automatic health checks
 - All services restart automatically if they crash
 
 ## 🤝 AI Assistance
-
 This project was developed with assistance from Claude (Anthropic) for:
 - Boilerplate code generation (~30%)
 - Docker configuration
@@ -267,5 +250,5 @@ This project was developed with assistance from Claude (Anthropic) for:
 All architecture decisions, business logic, and integration were implemented independently.
 
 ## 📄 License
-
 This is a technical challenge submission.
+

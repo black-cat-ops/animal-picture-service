@@ -20,7 +20,7 @@ This service provides REST API endpoints to:
 ```bash
 # If using Git
 git clone https://github.com/black-cat-ops/animal-picture-service.git
-cd */animal-picture-service
+cd animal-picture-service
 
 # If using ZIP
 unzip animal-picture-service.zip
